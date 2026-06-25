@@ -1,0 +1,37 @@
+async function fetchStockData(ticker: string, apiKey: string): Promise<StockPerformance | null> {
+  const url = `https://alphavantage.co{ticker}&apikey=${apiKey}`;
+
+  try {
+    const response = await fetch(url);
+
+    // Guard clause for network/server errors
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data: AlphaVantageQuote = await response.json();
+    const quote = data["Global Quote"];
+
+    // Guard clause if the API returns an empty object or invalid ticker
+    if (!quote || !quote["01. symbol"]) {
+      console.warn(`No data found for ticker: ${ticker}`);
+      return null;
+    }
+
+    // Clean percent string (e.g., "16.50%" -> 16.5)
+    const rawPercent = quote["10. change percent"];
+    const cleanPercent = parseFloat(rawPercent.replace("%", ""));
+
+    return {
+      companyName: ticker, // Fallback to ticker since quote endpoints rarely return full names
+      ticker: quote["01. symbol"],
+      percentageChange: cleanPercent,
+      currentPrice: parseFloat(quote["05. price"]),
+      driver: "Live API Data"
+    };
+
+  } catch (error) {
+    console.error(`Failed to fetch stock data for ${ticker}:`, error);
+    return null;
+  }
+}
