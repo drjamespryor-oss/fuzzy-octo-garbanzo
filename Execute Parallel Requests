@@ -1,0 +1,16 @@
+async function updateAllStocks() {
+  const tickers = ["KBH", "ABSI", "WEN", "COUR", "BLDR"];
+  const API_KEY = "YOUR_FREE_API_KEY"; // Replace with your actual API key
+
+  // Map tickers to fetch promises and run them concurrently
+  const fetchPromises = tickers.map(ticker => fetchStockData(ticker, API_KEY));
+  const results = await Promise.all(fetchPromises);
+
+  // Filter out any failed requests (null values)
+  const activeStocks: StockPerformance[] = results.filter((stock): stock is StockPerformance => stock !== null);
+
+  console.log("Updated Stock List:", activeStocks);
+}
+
+// Run the script
+updateAllStocks();
